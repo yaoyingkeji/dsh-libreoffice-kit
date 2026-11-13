@@ -1,5 +1,7 @@
 // GPU-only copies from LibreOffice's existing Ganesh context to acquired display images.
 #pragma once
+#include <config_features.h>
+#if HAVE_FEATURE_SKIA
 #include <SkSurface.h>
 class VirtualDevice;
 namespace office_ganesh {
@@ -32,3 +34,4 @@ void probeSurface(const sk_sp<SkSurface>& surface);
 void copy(VirtualDevice& device, const Target& target);
 void copySurface(const sk_sp<SkSurface>& surface, const Target& target);
 }
+#endif // HAVE_FEATURE_SKIA

@@ -1,5 +1,7 @@
 // Process-local Graphite rendering for native document and slideshow output.
 #pragma once
+#include <config_features.h>
+#if HAVE_FEATURE_SKIA
 #include <SkImage.h>
 #include <SkSurface.h>
 #include <webgpu/webgpu.h>
@@ -38,3 +40,4 @@ public:
     void finish();
 };
 }
+#endif // HAVE_FEATURE_SKIA
