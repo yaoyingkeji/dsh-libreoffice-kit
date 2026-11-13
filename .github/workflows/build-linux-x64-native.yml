@@ -49,16 +49,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential autoconf automake libtool pkg-config \
-            python3 git curl binutils flex bison \
+            python3 git curl binutils flex bison gperf \
+            zip unzip gettext \
             libfontconfig-dev libfreetype-dev libharfbuzz-dev \
-            libgraphite2-dev libxml2-dev libxslt1-dev zlib1g-dev
+            libgraphite2-dev libxml2-dev libxslt1-dev zlib1g-dev \
+            libjpeg-dev libpng-dev libtiff-dev libglib2.0-dev
           echo "=== Tool versions ==="
           gcc --version | head -1
           make --version | head -1
           autoconf --version | head -1
           node --version
-          echo "=== fontconfig check ==="
+          echo "=== Key tools check ==="
+          which gperf && gperf --version | head -1
           pkg-config --modversion fontconfig || echo "fontconfig NOT found"
+          pkg-config --modversion freetype2 || echo "freetype2 NOT found"
+          pkg-config --modversion harfbuzz || echo "harfbuzz NOT found"
 
       - name: Checkout LibreOffice core
         run: |
