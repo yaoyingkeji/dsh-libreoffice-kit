@@ -1,0 +1,11 @@
+--- a/idl/source/objects/types.cxx
++++ b/idl/source/objects/types.cxx
+@@ -253,6 +253,7 @@
+     rOutStm.WriteOString( "__attribute__((__weak__))" ) << endl;
+     rOutStm.WriteOString( "#elif defined(_WIN32) && defined(DISABLE_DYNLOADING)" ) << endl;
+     rOutStm.WriteOString( "__declspec(selectany)" ) << endl;
+     rOutStm.WriteOString( "#endif" ) << endl;
++    rOutStm.WriteOString( "extern " ) << endl;
+     rOutStm.WriteOString( "constinit const " ).WriteOString( aTypeName ).WriteOString( aVarName )
+            .WriteOString( " = " ) << endl;
+     rOutStm.WriteChar( '{' ) << endl;
