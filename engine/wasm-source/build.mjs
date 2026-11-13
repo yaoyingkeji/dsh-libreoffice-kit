@@ -216,7 +216,8 @@ function packageArtifacts() {
   if (sha256(originalLoader) !== compiledFiles['soffice.cjs']) throw new Error('WASM loader changed during packaging');
   const repacked = {
     // Emscripten embeds the data image's build path in diagnostic dependency names.
-    'soffice.cjs': Buffer.from(publicBuildValue(originalLoader.toString('utf8'), identityPaths)),
+    'soffice.cjs': Buffer.from(publicBuildValue(originalLoader.toString('utf8'), identityPaths)
+      .replaceAll('soffice.wasm', 'dsoffice.wasm').replaceAll('soffice.data', 'dsoffice.data')),
     'soffice.data': slimmed.data,
     'soffice.data.js.metadata': Buffer.from(`${JSON.stringify(slimmed.metadata)}\n`),
   };
@@ -224,14 +225,17 @@ function packageArtifacts() {
     recipes: Object.fromEntries(['build.mjs', 'slim.mjs', '../build-identity.mjs', '../ui-resource-policy.mjs'].map(name => [name, hashFile(path.join(owner, name))])),
     compiledFiles,
   } };
-  const files = { ...compiledFiles, ...Object.fromEntries(Object.entries(repacked).map(([name, bytes]) => [name, sha256(bytes)])) };
+  const packagedName = name => name.replace(/^soffice\./, 'dsoffice.');
+  const files = Object.fromEntries(Object.entries({ ...compiledFiles,
+    ...Object.fromEntries(Object.entries(repacked).map(([name, bytes]) => [name, sha256(bytes)])),
+  }).map(([name, hash]) => [packagedName(name), hash]));
   const manifest = {
     schemaVersion: 2,
     runtime: 'node',
-    entry: 'soffice.cjs',
-    wasm: 'soffice.wasm',
-    data: 'soffice.data',
-    metadata: 'soffice.data.js.metadata',
+    entry: 'dsoffice.cjs',
+    wasm: 'dsoffice.wasm',
+    data: 'dsoffice.data',
+    metadata: 'dsoffice.data.js.metadata',
     programPath: '/instdir/program',
     version: pinned.libreoffice.version,
     sourceCommit: pinned.libreoffice.commit,
@@ -253,10 +257,10 @@ function packageArtifacts() {
     let published = false;
     try {
       for (const [name, filename] of Object.entries(artifacts)) {
-        const target = path.join(staging, name);
+        const target = path.join(staging, packagedName(name));
         if (repacked[name]) writeFileSync(target, repacked[name]);
         else copyFileSync(path.join(program, filename), target);
-        if (hashFile(target) !== files[name]) throw new Error(`LibreOffice asset changed during packaging: ${filename}`);
+        if (hashFile(target) !== files[packagedName(name)]) throw new Error(`LibreOffice asset changed during packaging: ${filename}`);
       }
       writeFileSync(path.join(staging, 'manifest.json'), serialized);
       renameSync(staging, output);
