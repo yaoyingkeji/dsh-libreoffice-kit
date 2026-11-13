@@ -7,10 +7,6 @@ on:
         description: 'Parallelism (make -jN)'
         required: false
         default: '4'
-      resume:
-        description: 'Resume from existing configure (skip autogen)'
-        required: false
-        default: 'false'
 
 permissions:
   contents: read
@@ -87,7 +83,7 @@ jobs:
           node scripts/build-native.mjs \
             --platform ${{ env.PLATFORM }} \
             --jobs ${{ inputs.jobs }} \
-            ${{ inputs.resume == 'true' && '--resume' || '' }}
+            --resume
         env:
           MAKE: make
 
