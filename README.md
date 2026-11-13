@@ -6,6 +6,76 @@ kind: "package-library"
 
 English | [中文](README.zh.md)
 
+---
+
+## Branch Notes: libreoffice-kit-0.2.3-linux-x64
+
+### Overview
+
+This branch is created from upstream `deepseek-ai/dsh-libreoffice-kit` (master branch, version 0.1.3) with the following goals:
+
+1. Upgrade the repository from **0.1.3 to 0.2.3**
+2. Add **linux-x64-glibc native engine** support (approach: upstream official compilation)
+3. Complete source compilation via **GitHub Actions cloud workflow**
+
+### Changes
+
+#### 1. Build scripts upgraded to 0.2.3
+
+**Source of 0.2.3**: Extracted from the `@deepseek-ai/libreoffice-kit-win32-x64@0.2.3` platform package published by upstream deepseek-ai on npm. The `sources/` directory of this package contains the complete recipe (build scripts, patches, configuration) used by DeepSeek upstream to compile the LibreOffice native engine. The package was downloaded via `npm pack`, unpacked, and its `sources/` directory was extracted to overwrite the local `engine/native/` and related directories. LibreOffice core source is pinned to revision `bce0998`.
+
+Detailed changes:
+
+- `engine/native/` — 12 new source files (editor, graphite, ganesh, slideshow)
+- `engine/native/patches/` — 28 new patches (0066-0092)
+- `engine/native/patches/0093-linux-lpsolve-static-colamd.patch` — fixes `$colamd_c` variable not expanding in lpsolve static build
+- `engine/wasm-source/patches/` — 1 new patch
+- `scripts/` — 10 updated build scripts
+- `packages/frame-forwarding/` — new WebGPU frame forwarding SDK
+
+#### 2. Version bump
+
+| Package | Old | New |
+|---------|-----|-----|
+| Root workspace | 0.1.3 | 0.2.3 |
+| entry (@deepseek-ai/libreoffice-kit) | 0.1.3 | 0.2.3 |
+| win32-x64 / win32-arm64 | 0.1.3 | 0.2.3 |
+| darwin-x64 / darwin-arm64 | 0.1.3 | 0.2.3 |
+| wasm | 0.1.3 | 0.2.3 |
+| linux-x64-glibc | 0.1.1 | 0.2.3 |
+| linux-arm64-glibc | 0.1.1 | 0.2.3 |
+
+#### 3. linux-x64-glibc native engine support
+
+- `packages/entry/package.json` `optionalDependencies` adds `linux-x64-glibc`, `linux-arm64-glibc`, `koffi 3.1.1`
+- `packages/linux-x64-glibc/prebuilds.json`:
+  - `executable` changed from `bin/libreoffice-kit` to `bin/dsoffice`
+  - `programDirectory` changed from `program` to `program/program`
+  - `status` is `unbuilt` (updated to `built` after CI compilation)
+
+#### 4. GitHub Actions workflow
+
+- `.github/workflows/build-linux-x64-native.yml` — runs upstream official compilation on ubuntu-24.04 runner
+
+### Build flow
+
+```
+checkout-core.mjs → build-native.mjs (patches + autogen + make) → stage-native.mjs
+```
+
+1. `checkout-core.mjs` fetches LibreOffice core source (revision `bce0998`)
+2. `build-native.mjs` applies 93 patches, runs `autogen.sh` + `make build`
+3. `stage-native.mjs` stages build output to `packages/linux-x64-glibc/`
+
+#### Linux static build configuration
+
+- `--disable-dynamic-loading` (static linking, `DISABLE_DYNLOADING=TRUE`)
+- `--disable-skia` (no GPU rendering)
+- `--disable-gui`, `--without-x` (headless mode)
+- `--disable-nss`, `--with-tls=openssl`
+
+---
+
 ## Current goal
 
 **Font-friendly Office conversion and rendering in Node.js.** Version `0.1.0` extends the stable `0.0.1` line with format conversion, spreadsheet recalculation, a CLI, direct PNG rendering, and shared converter-factory font caches while retaining the native engine packages.

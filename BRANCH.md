@@ -12,7 +12,9 @@
 
 ### 1. 构建脚本升级到 0.2.3
 
-从 npm `@deepseek-ai/libreoffice-kit-win32-x64@0.2.3` 平台包的 `sources/` 目录提取 0.2.3 版本构建脚本：
+**0.2.3 来源**：从上游 deepseek-ai 在 npm 发布的 `@deepseek-ai/libreoffice-kit-win32-x64@0.2.3` 平台包中提取。该包的 `sources/` 目录包含 DeepSeek 上游官方用于编译 LibreOffice 原生引擎的完整 recipe（构建脚本、patch、配置）。通过 `npm pack` 下载该包后解包提取 sources/ 目录，覆盖本地 engine/native/ 等目录完成升级。LibreOffice core 源码版本固定在 revision `bce0998`。
+
+具体变更：
 
 - `engine/native/` 新增 12 个源文件（editor、graphite、ganesh、slideshow 相关）
 - `engine/native/patches/` 新增 28 个 patch（0066-0092）
