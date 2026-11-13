@@ -1,0 +1,15 @@
+--- a/desktop/Library_sofficeapp.mk
++++ b/desktop/Library_sofficeapp.mk
+@@ -163,6 +163,7 @@
+
+ # vim: set ts=4 sw=4 et:
+
++ifneq ($(filter MACOSX WNT,$(OS)),)
+ ifeq ($(DISABLE_DYNLOADING),TRUE)
+ $(eval $(call gb_Library_add_exception_objects,sofficeapp,\
+     desktop/source/lib/dsh_frame_forwarding_transport \
+@@ -175,3 +176,4 @@
+ $(eval $(call gb_Library_use_system_win32_libs,sofficeapp,d3d11 dxgi advapi32))
+ endif
+ endif
++endif
