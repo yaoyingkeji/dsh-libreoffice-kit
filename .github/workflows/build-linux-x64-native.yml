@@ -9,7 +9,7 @@ on:
         default: '4'
 
 permissions:
-  contents: read
+  contents: write
 
 env:
   PLATFORM: linux-x64-glibc
@@ -138,3 +138,21 @@ jobs:
             .build/native-${{ env.PLATFORM }}/autogen.input
             .build/native-${{ env.PLATFORM }}/dsh-build-identity.json
           retention-days: 7
+
+      - name: Create GitHub Release
+        if: success()
+        run: |
+          TAG="libreoffice-kit-v0.2.3-linux-x64"
+          TARBALL="libreoffice-kit-linux-x64-glibc-0.2.3.tar.gz"
+          tar czf "$TARBALL" -C packages/${{ env.PLATFORM }} .
+          SHA256=$(sha256sum "$TARBALL" | cut -d' ' -f1)
+          echo "SHA256: $SHA256"
+          gh release create "$TAG" "$TARBALL" \
+            --title "libreoffice-kit 0.2.3 linux-x64-glibc" \
+            --notes-file RELEASE.md \
+            --target libreoffice-kit-0.2.3-linux-x64
+          # Append SHA256 as a release asset
+          echo "$SHA256  $TARBALL" > checksums.txt
+          gh release upload "$TAG" checksums.txt --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

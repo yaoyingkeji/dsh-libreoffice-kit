@@ -1,4 +1,48 @@
-# 发布说明：libreoffice-kit 0.2.3 linux-x64-glibc
+# libreoffice-kit 0.2.3 linux-x64-glibc
+
+## 分支说明
+
+### 概述
+
+本分支基于上游 `deepseek-ai/dsh-libreoffice-kit`（master 分支，0.1.3 版本）创建，目标是：
+
+1. 将仓库从 **0.1.3 升级到 0.2.3**
+2. 添加 **linux-x64-glibc 原生引擎**支持（方案：上游官方编译）
+3. 通过 **GitHub Actions 云端工作流**完成源码编译
+
+### 0.2.3 来源
+
+从上游 deepseek-ai 在 npm 发布的 `@deepseek-ai/libreoffice-kit-win32-x64@0.2.3` 平台包中提取。该包的 `sources/` 目录包含 DeepSeek 上游官方用于编译 LibreOffice 原生引擎的完整 recipe（构建脚本、patch、配置）。通过 `npm pack` 下载该包后解包提取 sources/ 目录，覆盖本地 engine/native/ 等目录完成升级。LibreOffice core 源码版本固定在 revision `bce0998afefdbc355585ca324285661a2170ba77`。
+
+### 变更内容
+
+- `engine/native/` 新增 12 个源文件（editor、graphite、ganesh、slideshow 相关）
+- `engine/native/patches/` 新增 28 个 patch（0066-0092）
+- `engine/native/patches/0093-linux-lpsolve-static-colamd.patch` — 修复 lpsolve 静态构建中 `$colamd_c` 变量未展开的问题
+- `engine/wasm-source/patches/` 新增 1 个 patch
+- `scripts/` 更新 10 个构建脚本
+- `packages/frame-forwarding/` 新增 WebGPU 帧转发 SDK
+- `packages/entry/package.json` 的 `optionalDependencies` 添加 `linux-x64-glibc`、`linux-arm64-glibc`、`koffi 3.1.1`
+- `packages/linux-x64-glibc/prebuilds.json`：`executable` 改为 `bin/dsoffice`，`programDirectory` 改为 `program/program`
+- `.github/workflows/build-linux-x64-native.yml` — GitHub Actions 云端编译工作流
+
+### 构建流程
+
+```
+checkout-core.mjs → build-native.mjs (patches + autogen + make) → stage-native.mjs
+```
+
+1. `checkout-core.mjs` 从 LibreOffice core 仓库（revision `bce0998`）获取源码
+2. `build-native.mjs` 应用 93 个 patch，运行 `autogen.sh` + `make build`
+3. `stage-native.mjs` 将编译产物暂存到 `packages/linux-x64-glibc/`
+
+Linux 静态构建配置：
+- `--disable-dynamic-loading`（静态链接，`DISABLE_DYNLOADING=TRUE`）
+- `--disable-skia`（无 GPU 渲染）
+- `--disable-gui`、`--without-x`（无头模式）
+- `--disable-nss`、`--with-tls=openssl`
+
+---
 
 ## 版本信息
 
@@ -8,11 +52,7 @@
 - **LibreOffice Core**：revision `bce0998afefdbc355585ca324285661a2170ba77`
 - **发布仓库**：yaoyingkeji/dsh-libreoffice-kit（fork of deepseek-ai/dsh-libreoffice-kit）
 
-## 新增功能
-
-### linux-x64-glibc 原生引擎
-
-本版本首次为 Linux x64 (glibc) 平台提供原生引擎支持：
+## 引擎详情
 
 - **可执行文件**：`bin/dsoffice`（静态链接的 LibreOffice 转换引擎）
 - **程序目录**：`program/program`（LibreOffice 运行时资源）
@@ -20,7 +60,7 @@
 - **功能支持**：文档转换（convert）、重新计算（recalculate）
 - **限制**：无 Skia GPU 渲染（`--disable-skia`），渲染图片功能部分降级
 
-### 构建环境
+## 构建环境
 
 - **OS**：Ubuntu 24.04 (glibc)
 - **编译器**：GCC 13
@@ -67,31 +107,8 @@ packages/linux-x64-glibc/
     └── LibreOffice-third-party.html
 ```
 
-## 发布方式
-
-### GitHub Actions Artifact
-
-构建成功后，产物作为 GitHub Actions artifact 上传：
-- 名称：`libreoffice-kit-linux-x64-glibc`
-- 保留期：30 天
-- 路径：`packages/linux-x64-glibc/`
-
-### 后续发布选项
-
-1. **提交到仓库**：将构建产物提交到 `packages/linux-x64-glibc/`，更新 `prebuilds.json` 的 `status` 为 `built`
-2. **GitHub Release**：创建版本 tag `libreoffice-kit-v0.2.3`，上传引擎 tarball
-3. **npm 发布**：使用 `npm pack` + `npm publish` 发布 `@deepseek-ai/libreoffice-kit-linux-x64-glibc@0.2.3`
-
 ## 许可证
 
 - LibreOffice：MPL-2.0
 - DeepSeek Harness：MIT
 - 第三方依赖：见 `licenses/LibreOffice-third-party.html`
-
-## 验证
-
-构建完成后，`prebuilds.json` 包含：
-- `status: "built"`
-- `engine.glibcMinimum`：最低 glibc 版本要求
-- `files`：所有文件的 SHA256 校验和
-- `source`：源码 recipe 和 core revision 信息
