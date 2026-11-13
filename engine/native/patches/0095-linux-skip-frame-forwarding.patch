@@ -1,15 +1,26 @@
+diff --git a/desktop/Library_sofficeapp.mk b/desktop/Library_sofficeapp.mk
+index 46af5ce..37dd4e9 100644
 --- a/desktop/Library_sofficeapp.mk
 +++ b/desktop/Library_sofficeapp.mk
-@@ -163,6 +163,7 @@
-
+@@ -163,6 +163,7 @@ endif
+ 
  # vim: set ts=4 sw=4 et:
-
+ 
 +ifneq ($(filter MACOSX WNT,$(OS)),)
  ifeq ($(DISABLE_DYNLOADING),TRUE)
  $(eval $(call gb_Library_add_exception_objects,sofficeapp,\
      desktop/source/lib/dsh_frame_forwarding_transport \
-@@ -175,3 +176,4 @@
+@@ -176,6 +177,13 @@ ifeq ($(OS),WNT)
  $(eval $(call gb_Library_use_system_win32_libs,sofficeapp,d3d11 dxgi advapi32))
  endif
  endif
++else
++ifeq ($(DISABLE_DYNLOADING),TRUE)
++$(eval $(call gb_Library_add_exception_objects,sofficeapp,\
++    desktop/source/lib/dsh_frame_forwarding_linux_stub \
++))
 +endif
++endif
+ 
+ ifneq ($(filter MACOSX WNT,$(OS)),)
+ $(eval $(call gb_Library_use_externals,sofficeapp,skia))

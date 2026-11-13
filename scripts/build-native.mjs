@@ -157,6 +157,7 @@ if (/^(darwin|win32)-(arm64|x64)$/.test(platform)) {
     ['packages/frame-forwarding/src/relay-transport.inc', 'relay-transport.inc'],
     ['packages/frame-forwarding/src/transport.cc', 'dsh_frame_forwarding_transport.cxx'],
     ['packages/frame-forwarding/src/producer.cc', 'dsh_frame_forwarding_producer.cxx'],
+    ['engine/native/frame-forwarding-linux-stub.cxx', 'dsh_frame_forwarding_linux_stub.cxx'],
   ]) {
     const contents = readFileSync(join(root, source), 'utf8');
     const destination = join(core, 'desktop/source/lib', name);
@@ -177,7 +178,7 @@ if (/^(darwin|win32)-(arm64|x64)$/.test(platform)) {
   run('git', ['add', '--intent-to-add', '--', 'vcl/inc/skia/dsh_graphite.hxx', 'vcl/skia/dsh_graphite.cxx', 'vcl/inc/skia/dsh_ganesh.hxx', 'vcl/skia/dsh_ganesh.cxx', 'vcl/skia/dsh_ganesh_metal.mm', 'vcl/skia/dsh_ganesh_vulkan.cxx', 'desktop/source/lib/graphite-interop-internal.hxx', 'desktop/source/app/dsh_native_worker.cxx',
     'desktop/source/app/dsh-document-operations.hxx', 'desktop/source/app/load-diagnostics.hxx', 'desktop/source/lib/dsh_slideshow_probe.cxx', 'desktop/source/lib/dsh_editor_session.cxx',
     'desktop/source/lib/editor-pixels.hxx', 'desktop/source/lib/editor-render.hxx', 'desktop/source/lib/dsh_frame_forwarding.h',
-    'desktop/source/lib/producer-internal.h', 'desktop/source/lib/transport.h', 'desktop/source/lib/relay-transport.inc', 'desktop/source/lib/dsh_frame_forwarding_transport.cxx', 'desktop/source/lib/dsh_frame_forwarding_producer.cxx'], core);
+    'desktop/source/lib/producer-internal.h', 'desktop/source/lib/transport.h', 'desktop/source/lib/relay-transport.inc', 'desktop/source/lib/dsh_frame_forwarding_transport.cxx', 'desktop/source/lib/dsh_frame_forwarding_producer.cxx', 'desktop/source/lib/dsh_frame_forwarding_linux_stub.cxx'], core);
 }
 run(make, ['build', `PARALLELISM=${parallelism}`], build, coreEnvironment);
 const executable = join(build, `dsoffice${process.platform === 'win32' ? '.exe' : ''}`);

@@ -1,0 +1,13 @@
+diff --git a/external/fontconfig/ExternalProject_fontconfig.mk b/external/fontconfig/ExternalProject_fontconfig.mk
+index 6ac0b46..63083f1 100644
+--- a/external/fontconfig/ExternalProject_fontconfig.mk
++++ b/external/fontconfig/ExternalProject_fontconfig.mk
+@@ -55,7 +55,7 @@ $(call gb_ExternalProject_get_state_target,fontconfig,build) :
+ 			$(if $(filter FUZZERS,$(BUILD_TYPE)), \
+ 				--disable-shared, \
+ 				$(if $(filter LINUX,$(OS)), \
+-					--disable-static \
++					$(if $(DISABLE_DYNLOADING),--disable-shared,--disable-static) \
+ 					--prefix=/ \
+ 					--with-add-fonts=$(fontconfig_add_fonts) \
+ 					--with-cache-dir=/usr/lib/fontconfig/cache \
