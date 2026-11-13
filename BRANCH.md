@@ -5,7 +5,7 @@
 本分支基于上游 `deepseek-ai/dsh-libreoffice-kit`（master 分支，0.1.3 版本）创建，目标是：
 
 1. 将仓库从 **0.1.3 升级到 0.2.3**
-2. 添加 **linux-x64-glibc 原生引擎**支持（方案 A：上游官方编译）
+2. 添加 **linux-x64-glibc 原生引擎**支持（方案 ：上游官方编译）
 3. 通过 **GitHub Actions 云端工作流**完成源码编译
 
 ## 变更内容
@@ -61,18 +61,3 @@ checkout-core.mjs → build-native.mjs (patches + autogen + make) → stage-nati
 - `--disable-skia`（无 GPU 渲染）
 - `--disable-gui`、`--without-x`（无头模式）
 - `--disable-nss`、`--with-tls=openssl`
-
-## 提交记录
-
-| 提交 | 说明 |
-|------|------|
-| `be28dab` | 升级到 libreoffice-kit 0.2.3 并添加 linux-x64-glibc 原生引擎支持 |
-| `eb620cd` | 添加 GitHub Actions 工作流：Linux x64 原生引擎云端编译 |
-| `acf5d9a` | 修复构建：添加 gperf 等完整构建依赖 |
-| (待提交) | 修复 lpsolve 静态构建 + 分支说明 + 发布说明 |
-
-## 身份
-
-所有提交使用 yaoyingkeji 身份：
-- 姓名：深圳市耀影科技有限公司
-- 邮箱：yaoyingkeji@yaoying.vip
