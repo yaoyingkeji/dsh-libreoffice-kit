@@ -123,6 +123,80 @@ jobs:
           echo "=== program/ (top level) ==="
           ls packages/${{ env.PLATFORM }}/program/ | head -20
 
+      - name: Smoke test (document conversion)
+        if: success()
+        run: |
+          set -euo pipefail
+          PKG="packages/${{ env.PLATFORM }}"
+          DSOFFICE="$PKG/bin/dsoffice"
+          PROGRAM_DIR="$PKG/program/program"
+          PROFILE_DIR="$(mktemp -d)"
+          INPUT_FILE="$(mktemp -d)/smoke.docx"
+          OUTPUT_FILE="$(mktemp -d)/smoke.pdf"
+
+          echo "=== Creating minimal DOCX test file ==="
+          python3 -c "
+          import zipfile
+          content = '''<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+          <w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\">
+            <w:body><w:p><w:r><w:t>Smoke test</w:t></w:r></w:p></w:body>
+          </w:document>'''
+          rels = '''<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+          <Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\">
+            <Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument\" Target=\"word/document.xml\"/>
+          </Relationships>'''
+          doc_rels = '''<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+          <Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"/>'''
+          ct = '''<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>
+          <Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">
+            <Default Extension=\"xml\" ContentType=\"application/xml\"/>
+            <Override PartName=\"/word/document.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml\"/>
+          </Types>'''
+          with zipfile.ZipFile('$INPUT_FILE', 'w', zipfile.ZIP_DEFLATED) as z:
+              z.writestr('[Content_Types].xml', ct)
+              z.writestr('_rels/.rels', rels)
+              z.writestr('word/_rels/document.xml.rels', doc_rels)
+              z.writestr('word/document.xml', content)
+          print(f'Created: $INPUT_FILE')
+          "
+
+          echo "=== Running dsoffice smoke test (DOCX -> PDF) ==="
+          LD_LIBRARY_PATH="$PROGRAM_DIR" \
+          HOME="$PROFILE_DIR" \
+          TMPDIR="$PROFILE_DIR" \
+          SAL_DISABLE_PRINTERLIST=1 \
+          SAL_DISABLE_DEFAULTPRINTER=1 \
+          timeout 60 "$DSOFFICE" \
+            --program-directory "$PROGRAM_DIR" \
+            --input-path "$INPUT_FILE" \
+            --output-path "$OUTPUT_FILE" \
+            --profile-directory "$PROFILE_DIR" \
+            --max-output-bytes 104857600 \
+            --max-image-resolution 300 \
+            --format pdf \
+            --recalculate false
+          EXIT_CODE=$?
+
+          echo "=== dsoffice exit code: $EXIT_CODE ==="
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "::error::dsoffice smoke test FAILED (exit code $EXIT_CODE). The built engine crashes at runtime."
+            exit 1
+          fi
+
+          echo "=== Checking output file ==="
+          if [ ! -f "$OUTPUT_FILE" ]; then
+            echo "::error::Output PDF was not created. dsoffice did not produce output."
+            exit 1
+          fi
+          FILE_SIZE=$(stat -c%s "$OUTPUT_FILE")
+          echo "Output file size: $FILE_SIZE bytes"
+          if [ "$FILE_SIZE" -lt 100 ]; then
+            echo "::error::Output PDF is too small ($FILE_SIZE bytes). Conversion may have failed."
+            exit 1
+          fi
+          file "$OUTPUT_FILE"
+          echo "=== Smoke test PASSED ==="
+
       - name: Upload staged package
         if: success()
         uses: actions/upload-artifact@v7
